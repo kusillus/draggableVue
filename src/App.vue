@@ -5,7 +5,9 @@
       <div class="card">
         <h4>List 1</h4>
         <draggable 
-          v-model='listone' 
+          v-model='listone'
+          @start="startDrag"
+          @end="endDrag"
           :options="{
             group: {
               name: 'items',
@@ -16,7 +18,7 @@
           class="elements"
           @click="showInfo()">
           <div v-for="(item, index) in listone" :key="index">
-            <div class="element" @click="showItem(item)">{{item.name}},{{index}}</div>
+            <div class="element" @click="showItem(item)" :id="item.id">{{item.name}},{{index}}</div>
           </div>
         </draggable>
         <button @click="showInfo(listone)">SendListOne</button>
@@ -28,10 +30,11 @@
           v-model='listtwo'
           :options="{group:'items'}"
           :move="checkMove"
+          @add="onAdd"
           @end="endDrag"
           class="elements">
           <div v-for="(item, index) in listtwo" :key="index">
-            <div class="element" @click="showItem(item)">{{item.name}} , {{index}} <span class="close" @click="removeItem(index)"><strong>x</strong></span></div>
+            <div class="element" @click="showItem(item)" :id="item.id">{{item.name}} , {{index}} <span class="close" @click="removeItem(index)"><strong>x</strong></span></div>
           </div>
         </draggable>
         <button @click="showInfo(listtwo)">SendListTwo</button>
@@ -50,29 +53,28 @@ export default {
     return {
       msg: 'Welcome to Your Vue.js App',
       listone: [
-        {name: 'item 1', id: 1},
-        {name: 'item 2', id: 2},
-        {name: 'item 3', id: 3},
-        {name: 'item 4', id: 4}
+        {name: 'item 1', id: "ID1"},
+        {name: 'item 2', id: "ID2"},
+        {name: 'item 3', id: "ID3"},
+        {name: 'item 4', id: "ID4"}
       ],
       listtwo: [
-        {name: 'item 5', id: 5},
-        {name: 'item 6', id: 6}
+        {name: 'item 5', id: "ID5"},
+        {name: 'item 6', id: "ID6"}
       ]
     }
   },
-  watch: {
-    listtwo: {
-      handler: function(newValue, oldValue){
-        this.diffArray(newValue, oldValue)
-        // console.log(newValue)
-      },
-      deep: true
-    }
-  },
+  // watch: {
+  //   listtwo: {
+  //     handler: function(newValue, oldValue){
+  //       // this.diffArray(newValue, oldValue)
+  //     },
+  //     deep: true
+  //   }
+  // },
   methods: {
     removeItem: function (index) {
-      // this.listtwo.splice(index, 1)
+      this.listtwo.splice(index, 1)
     },
     showInfo: function (elem) {
       // console.log(elem)
@@ -80,29 +82,28 @@ export default {
     showItem: function (elem) {
       // console.log(elem)
     },
-    diffArray: function(aNew, aOld) {
-      if(aNew.length != aOld.length){
-        // aNew.forEach(function(element, index) {
-        //   // console.log(aNew[index].id)
-        //   aOld.forEach(function(oldElem, oldIdx){
-        //     console.log(aOld[oldIdx].id)
-        //     // if(aNew[index].id == )            
-        //   })
-        //   // console.log(index)
-        //   // Object.keys(element).forEach(function (item){
-        //   //   console.log(item)
-        //   // })
-        // })
-      } else {
-        // console.log('Equals!')
-      }
-      
-    },
     checkMove: function(evt) {
-      return (evt.draggedContext.element.name)
+      // console.log(evt.draggedContext.element.id)
     },
     endDrag: function(evt) {
-      console.log(evt)
+      if(evt.oldIndex !== evt.newIndex){
+        console.log('cambio de posicion')
+        console.log(evt)
+        console.log(evt.clone.firstChild.id)
+      } else {
+        console.log('se mantiene la posicion')
+      }
+    },
+    startDrag: function (evt) {
+			// console.log(evt)
+		},
+    onAdd: function (evt) {
+      if(confirm('Desea agregar?') == true){
+        console.log(evt.clone.firstChild.id)
+      } else {
+        console.log('no se agrego')
+        this.removeItem(evt.newIndex)
+      }
     }
   },
   components: {
