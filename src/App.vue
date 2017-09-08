@@ -4,53 +4,54 @@
     <div class="layout">
       <div class="card">
         <h4>List 1</h4>
-        <draggable 
+        <draggable          
           v-model='listone'
-          @start="startDrag"
           @end="endDrag"
           :options="{
             group: {
               name: 'items',
               pull: 'clone',
-              put: false
+              put: ['inf']
             }
           }"
-          class="elements"
-          @click="showInfo()">
-          <div v-for="(item, index) in listone" :key="index">
-            <div class="element" @click="showItem(item)" :data-name="item.name" :id="item.id">{{item.name}},{{index}}</div>
+          class="elements">
+          <div v-for="(item, index) in listone" :key="index" data-type="lExterna">
+            <div class="element" :data-name="item.name" :id="item.id">{{item.name}},{{index}}</div>
           </div>
         </draggable>
-        <button @click="showInfo(listone)">SendListOne</button>
       </div>
       <div>
         <h5 style="margin:0;">Lista Definitiva</h5>
         <draggable
           :list="listAn"
-          v-model='listAn'
-          :move="checkMove"
-          :options="{group:'items'}"
+          :options="{ group:'Padre',
+                      name: 'sup',
+                      put:false}"
           @add="onAdd"
+          :move="checkMove"
           class="elements">
           <div class="elements" style="margin:.4rem;" v-for="(item, index) in listAn" :key="index">
             <div v-if="item.name != 'new_list'">
-              <h5 style="margin:0;">Lista {{item.name}}</h5>
-              <div v-for="(itm, idx) in item.values" :key="idx">
+              <h5 style="margin:0;">Lista {{item.name}} <span class="close" @click="removeItem(index)"><strong>x</strong></span></h5>
                 <draggable
                   :list="item.values"
-                  v-model='item.values'
                   :move="moveItem"
                   @end="endDrag"
-                  :options="{group:'items'}">
-                  <div style="padding:.5rem;" @click="showItem(itm)" :id="itm.id" :data-name="itm.name">{{itm.name}} , {{idx}} <span class="close" @click="removeItemAn(idx, index)"><strong>x</strong></span></div>
-                </draggable>
-              </div>  
+                  :options="{ group:'items',
+                              name:'inf',
+                              put:['sup']
+                              }">
+                  <div v-for="(itm, idx) in item.values" :key="idx">
+                    <div style="padding:.5rem;" :id="itm.id" :data-name="itm.name" data-type="lInterna"  :data-title="item.name">{{itm.name}} , {{idx}} <span class="close" @click="removeItemAn(idx, index)"><strong>x</strong></span></div>
+                  </div>
+                </draggable>  
             </div>
             <div v-else>
               <h5 style="margin:0;">Lista {{item.name}}</h5>
               <draggable
                 :list="item.values"
                 v-model='item.values'
+                :move="noMove"
                 :options="{group:'items'}"
                 @add="addNew"
                 class="elements bg-red"> 
@@ -58,6 +59,16 @@
             </div>
           </div>
         </draggable>
+      </div>
+      <!-- ESTA ES UNA LISTA DE PRUEBA -->
+      <div>
+        <h5>Lista de prueba</h5>
+        <pre>
+          {{ listAn }}
+        </pre>
+        <pre>
+          {{ listone }}
+        </pre>
       </div>
     </div>
   </div>
@@ -105,11 +116,17 @@ export default {
       ]
     }
   },
+  watch: {
+
+  },
   methods: {
     removeItem: function (index) {
-      this.listtwo.splice(index, 1)
+      this.listAn.splice(index, 1)
     },
     removeItemAn: function (idx, supIdx) {
+      console.log('Eliminado!')
+      console.log(idx)
+      console.log(supIdx)
       if(this.listAn[supIdx].values.length == 1) {
         this.listAn.splice(supIdx,1)
       } else {
@@ -117,53 +134,56 @@ export default {
       }
     },
     moveItem: function () {
+      return true
+    },
+    noMove: function(){
       return false
     },
-    showInfo: function (elem) {
-      console.log(elem)
-      elem.map(function(obj){
-        let newArray = {}
-        if(obj.name == 'new_list'){
-          console.log('no se agrega al nuevo array')
-        } else {
-          newArray.push(obj)
-        }
-        console.log(newArray)
-      })
-    },
-    showItem: function (elem) {
-      // console.log(elem)
-    },
-    checkMove: function(evt) {
-      console.log(evt)
-    },
-    endDrag: function(evt) {
-      if(evt.oldIndex !== evt.newIndex){
-        console.log('cambio de posicion')
-        console.log(evt)
-        console.log(evt.clone.firstChild.id)
-      } else {
-        console.log('se mantiene la posicion')
+    endDrag: function(evt) {  
+      let inText = evt.srcElement.innerText.length
+      console.log(inText)
+      if(inText == 0) {
+        let eIndex
+        let lName = evt.item.firstChild.dataset.title
+        console.log(lName)
+        this.listAn.map(function(item, index){
+          if(item.name == lName){
+            eIndex = index
+          }
+        })
+        console.log(inText)
+        this.listAn.splice(eIndex,1)
+
       }
     },
-    pack: function () {
-      console.log('paaack')
+    checkMove: function(evt) {
+      console.log(evt.draggedContext.element.name)
+      if(evt.draggedContext.element.name == "new_list"){
+        return false
+      }
     },
-    startDrag: function (evt) {
-			// console.log(evt)
-		},
+    pack: function (evt) {
+      console.log(evt)
+    },
     onAdd: function (evt) {
       this.listAn.splice(evt.newIndex, 1)
     },
     addNew: function (el) {
-      console.log(el)
-      console.log('ADDNWE!')
+      // console.log(el.clone.firstChild.dataset.name)
+      // console.log(el.clone.firstChild.id)
       this.listAn.push({
-        name: 'Lista ' + el.clone.firstChild.dataset.name,
+        name: el.clone.firstChild.dataset.name,
         values: [
             {name: el.clone.firstChild.dataset.name, id: el.clone.firstChild.id}
           ]
       })
+      let iNewL
+      this.listAn.map(function(item, index) {
+        if(item.name == 'new_list'){
+          iNewL = index
+        }
+      })
+      this.listAn[iNewL].values.splice(0,1)
     }
   },
   components: {
